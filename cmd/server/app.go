@@ -4,19 +4,19 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
+
+	"tdx-device-plugin/pkg/server"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/hairongchen/tdx-device-plugin/pkg/server"
 )
 
 func main() {
 
 	log.Println("Intel TDX device plugin starting")
-	tdxdpSrv := server.NewTdxDpServer()
-	go tdxdpSrv.Run()
+	tdxdpsrv := server.NewTdxDpServer()
+	go tdxdpsrv.Run()
 
-	if err := tdxdpSrv.RegisterToKubelet(); err != nil {
+	if err := tdxdpsrv.RegisterToKubelet(); err != nil {
 		log.Fatalf("register to kubelet error: %v", err)
 	}
 
@@ -27,7 +27,7 @@ func main() {
 	}
 	defer watcher.Close()
 
-	err = watcher.Add(path.Dir(tdxdpSrv.KubeletSocket))
+	err = watcher.Add(path.Dir(server.KubeletSocket))
 	if err != nil {
 		log.Fatalf("watch kubelet error")
 		return
@@ -35,11 +35,10 @@ func main() {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Name == tdxdpSrv.KubeletSocket && event.Op&fsnotify.Create == fsnotify.Create {
-				time.Sleep(time.Second)
+			if event.Name == server.KubeletSocket && event.Op&fsnotify.Create == fsnotify.Create {
 				log.Fatalf("restart TDX device plugin due to kubelet restart")
 			}
-			if event.Name == tdxdpSrv.tdxdpSocket && event.Op&fsnotify.Delete == fsnotify.Delete {
+			if event.Name == server.TdxDpSocket && event.Op&fsnotify.Remove == fsnotify.Remove {
 				log.Fatalf("restart TDX device plugin due to tdx device plugin socket being deleted")
 			}
 		case err := <-watcher.Errors:

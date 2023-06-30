@@ -13,20 +13,21 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	dpapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
+	dpapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
+	//dpapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
 const (
-	namespace                  = "tdx.intel.com"
-	deviceType                 = "tdx-guest"
-	tdxdpSocket                = "/var/lib/kubelet/device-plugins/tdxdp.sock"
+	Namespace                  = "tdx.intel.com"
+	DeviceType                 = "tdx-guest"
+	TdxDpSocket                = "/var/lib/kubelet/device-plugins/tdxdp.sock"
 	KubeletSocket              = "/var/lib/kubelet/device-plugins/kubelet.sock"
 	TDX_DEVICE_DEPRECATED      = "/dev/tdx-attest"
 	TDX_DEVICE_1_0             = "/dev/tdx-guest"
 	TDX_DEVICE_1_5             = "/dev/tdx_guest"
-	maxRestartCount            = 5
-	socketConnectTimeout       = 5
-	defaultPodCount       uint = 110
+	MaxRestartCount            = 5
+	SocketConnectTimeout       = 5
+	DefaultPodCount       uint = 110
 )
 
 type TdxDpServer struct {
@@ -75,7 +76,7 @@ func (tdxdpsrv *TdxDpServer) scanDevice() error {
 		return err
 	}
 
-	for i := uint(0); i < defaultPodCount; i++ {
+	for i := uint(0); i < DefaultPodCount; i++ {
 		deviceID := fmt.Sprintf("%s-%d", "tdx-guest", i)
 		tdxdpsrv.devices[deviceID] = &dpapi.Device{
 			ID:     deviceID,
@@ -95,11 +96,11 @@ func (tdxdpsrv *TdxDpServer) Run() error {
 
 	dpapi.RegisterDevicePluginServer(tdxdpsrv.srv, tdxdpsrv)
 
-	err = syscall.Unlink(tdxdpSocket)
+	err = syscall.Unlink(TdxDpSocket)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	listen, err := net.Listen("unix", tdxdpSocket)
+	listen, err := net.Listen("unix", TdxDpSocket)
 	if err != nil {
 		return err
 	}
@@ -112,14 +113,14 @@ func (tdxdpsrv *TdxDpServer) Run() error {
 				break
 			}
 
-			if failCount > maxRestartCount {
+			if failCount > MaxRestartCount {
 				log.Fatalf("TDX plugin server crashed. Quitting...")
 			}
 			failCount++
 		}
 	}()
 
-	connection, err := tdxdpsrv.connect(tdxdpSocket, time.Duration(socketConnectTimeout)*time.Second)
+	connection, err := tdxdpsrv.connect(TdxDpSocket, time.Duration(SocketConnectTimeout)*time.Second)
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func (s *TdxDpServer) connect(unixSocketPath string, timeout time.Duration) (*gr
 
 func (tdxdpsrv *TdxDpServer) RegisterToKubelet() error {
 
-	conn, err := tdxdpsrv.connect(KubeletSocket, time.Duration(maxRestartCount)*time.Second)
+	conn, err := tdxdpsrv.connect(KubeletSocket, time.Duration(MaxRestartCount)*time.Second)
 	if err != nil {
 		return err
 	}
@@ -155,8 +156,8 @@ func (tdxdpsrv *TdxDpServer) RegisterToKubelet() error {
 	client := dpapi.NewRegistrationClient(conn)
 	request := &dpapi.RegisterRequest{
 		Version:      dpapi.Version,
-		Endpoint:     path.Base(tdxdpSocket),
-		ResourceName: namespace + "/" + deviceType,
+		Endpoint:     path.Base(TdxDpSocket),
+		ResourceName: Namespace + "/" + DeviceType,
 	}
 
 	_, err = client.Register(context.Background(), request)
@@ -189,6 +190,25 @@ func (tdxdpsrv *TdxDpServer) ListAndWatch(e *dpapi.Empty, lwSrv dpapi.DevicePlug
 			return nil
 		}
 	}
+}
+
+func (tdxdpsrv *TdxDpServer) GetDevicePluginOptions(ctx context.Context, e *dpapi.Empty) (*dpapi.DevicePluginOptions, error) {
+	return &dpapi.DevicePluginOptions{PreStartRequired: true}, nil
+}
+
+func (tdxdpsrv *TdxDpServer) GetPreferredAllocation(ctx context.Context, r *dpapi.PreferredAllocationRequest) (*dpapi.PreferredAllocationResponse, error) {
+	/*devices := make(map[string]dpapi.Device)
+
+	  for _, device := range tdxdpsrv.devices {
+	          devices[device.ID] = *device
+	  }
+
+	  return tdxdpsrv.getPreferredAllocFunc(r, devices) */
+	return &dpapi.PreferredAllocationResponse{}, nil
+}
+
+func (tdxdpsrv *TdxDpServer) PreStartContainer(ctx context.Context, req *dpapi.PreStartContainerRequest) (*dpapi.PreStartContainerResponse, error) {
+	return &dpapi.PreStartContainerResponse{}, nil
 }
 
 func (tdxdpsrv *TdxDpServer) Allocate(ctx context.Context, reqs *dpapi.AllocateRequest) (*dpapi.AllocateResponse, error) {
