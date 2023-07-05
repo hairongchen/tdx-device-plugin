@@ -45,7 +45,7 @@ resources: {}
   #   memory: 128Mi
 
 nodeSelector: {
-  intel.feature.node.kubernetes.io/tdx-guest: true
+  intel.feature.node.kubernetes.io/tdx-guest: enabled
 }
 
 affinity: {}
