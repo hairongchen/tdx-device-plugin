@@ -15,8 +15,8 @@ spec:
     metadata:
       # This annotation is deprecated. Kept here for backward compatibility
       # See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
+      #annotations:
+      #  scheduler.alpha.kubernetes.io/critical-pod: ""
       labels:
         {{- include "tdx-device-plugin.selectorLabels" . | nindent 8 }}
     spec:
@@ -31,7 +31,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -56,7 +56,7 @@ spec:
       # scheduler reserves resources for critical add-on pods so that they can
       # be rescheduled after a failure.
       # See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
-      priorityClassName: "system-node-critical"
+      #priorityClassName: "system-node-critical"
       hostPID: true
       volumes:
       - name: device-plugin

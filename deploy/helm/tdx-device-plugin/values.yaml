@@ -1,4 +1,4 @@
-# Default values for cola.
+# Default values for tdx-device-plugin.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -19,7 +19,7 @@ serviceAccount:
   create: true
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: tdx-dp-admin
+  name: tdx-device-plugin-admin
 
 podSecurityContext: {}
   # fsGroup: 2000
@@ -45,7 +45,7 @@ resources: {}
   #   memory: 128Mi
 
 nodeSelector: {
-  tdx-guest: enable
+  intel.feature.node.kubernetes.io/tdx-guest: true
 }
 
 affinity: {}
