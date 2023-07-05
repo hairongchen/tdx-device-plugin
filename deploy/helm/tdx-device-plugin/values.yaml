@@ -5,7 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: tdx-device-plugin:v0.1
+  repository: docker.io/library/tdx-device-plugin
+  tag: v0.1
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
