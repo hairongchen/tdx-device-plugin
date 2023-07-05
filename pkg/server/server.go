@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"path"
-	"strings"
 	"syscall"
 	"time"
 
@@ -221,12 +220,10 @@ func (tdxdpsrv *TdxDpServer) Allocate(ctx context.Context, reqs *dpapi.AllocateR
 		Permissions:   TdxDevicePermissions,
 	}
 
-	for _, req := range reqs.ContainerRequests {
-		log.Println("received request: ", strings.Join(req.DevicesIDs, ","))
+	for range reqs.ContainerRequests {
+		//log.Println("received request: ", strings.Join(req.DevicesIDs, ","))
 		resp := dpapi.ContainerAllocateResponse{
-			Envs: map[string]string{
-				"TDX_DEVICES": "/dev/tdx-guest",
-			},
+			Envs:        make(map[string]string),
 			Annotations: make(map[string]string),
 			Devices:     []*dpapi.DeviceSpec{&devSpec},
 			Mounts:      nil,
