@@ -25,6 +25,7 @@ const (
 	TDX_DEVICE_DEPRECATED      = "/dev/tdx-attest"
 	TDX_DEVICE_1_0             = "/dev/tdx-guest"
 	TDX_DEVICE_1_5             = "/dev/tdx_guest"
+	TdxDevicePermissions       = "rw"
 	MaxRestartCount            = 5
 	SocketConnectTimeout       = 5
 	DefaultPodCount       uint = 110
@@ -217,6 +218,7 @@ func (tdxdpsrv *TdxDpServer) Allocate(ctx context.Context, reqs *dpapi.AllocateR
 	devSpec := dpapi.DeviceSpec{
 		HostPath:      tdxdpsrv.tdxGuestDevice,
 		ContainerPath: tdxdpsrv.tdxGuestDevice,
+		Permissions:   TdxDevicePermissions,
 	}
 
 	for _, req := range reqs.ContainerRequests {
