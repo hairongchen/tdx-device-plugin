@@ -214,7 +214,7 @@ func (tdxdpsrv *TdxDpServer) PreStartContainer(ctx context.Context, req *dpapi.P
 func (tdxdpsrv *TdxDpServer) Allocate(ctx context.Context, reqs *dpapi.AllocateRequest) (*dpapi.AllocateResponse, error) {
 	response := &dpapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
-		log.Println("received request: %v", strings.Join(req.DevicesIDs, ","))
+		log.Println("received request: ", strings.Join(req.DevicesIDs, ","))
 		resp := dpapi.ContainerAllocateResponse{
 			Envs: map[string]string{
 				"TDX_DEVICES": strings.Join(req.DevicesIDs, ","),
