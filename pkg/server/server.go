@@ -213,12 +213,21 @@ func (tdxdpsrv *TdxDpServer) PreStartContainer(ctx context.Context, req *dpapi.P
 
 func (tdxdpsrv *TdxDpServer) Allocate(ctx context.Context, reqs *dpapi.AllocateRequest) (*dpapi.AllocateResponse, error) {
 	response := &dpapi.AllocateResponse{}
+
+	devSpec := dpapi.DeviceSpec{
+		HostPath:      tdxdpsrv.tdxGuestDevice,
+		ContainerPath: tdxdpsrv.tdxGuestDevice,
+	}
+
 	for _, req := range reqs.ContainerRequests {
 		log.Println("received request: ", strings.Join(req.DevicesIDs, ","))
 		resp := dpapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				"TDX_DEVICES": strings.Join(req.DevicesIDs, ","),
+				"TDX_DEVICES": "/dev/tdx-guest",
 			},
+			Annotations: make(map[string]string),
+			Devices:     []*dpapi.DeviceSpec{&devSpec},
+			Mounts:      nil,
 		}
 		response.ContainerResponses = append(response.ContainerResponses, &resp)
 	}
